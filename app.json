@@ -3,6 +3,10 @@
     "name": "CarVault",
     "slug": "CarVault",
     "version": "1.0.0",
+    "platforms": [
+      "android",
+      "ios"
+    ],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -16,6 +20,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.carvault",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -31,6 +36,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "52fac824-bcb9-4ed5-909c-07e39ec408b9"
+      }
     }
   }
 }
