@@ -20,7 +20,7 @@ export default function HomeScreen() {
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Joseph is very gay and likes black men !!!!!!!!!!!!!!!!</ThemedText>
+        <ThemedText type="subtitle">Hello</ThemedText>
         <ThemedText>
           Alex is extremely gay - he is the king of gay people!
           <ThemedText type="defaultSemiBold">
