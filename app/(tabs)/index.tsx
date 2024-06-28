@@ -1,28 +1,58 @@
 import React from 'react';
 import { Image, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import LoginPage from "@/components/LoginPage";
+import {getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged} from "firebase/auth";
+import {Button} from "@gluestack-ui/themed";
 
 export default function HomeScreen() {
+  const auth = getAuth();
+  const [userId, setUserId] = React.useState("");
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setUserId(user.uid)
+      console.log("user successfully logged in: " + user)
+
+    } else {
+      setUserId("")
+      console.log("no user is currently logged in.")
+    }
+  });
+
+  const signOut = () => {
+    auth.signOut()
+  }
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.logoText}>CarVault</Text>
+        <Button action={'negative'} onPress={signOut}></Button>
       </View>
-      <View style={styles.content}>
-        <View style={styles.photoContainer}>
-          {/* Add your photo component here */}
-        </View>
-      </View>
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Garage</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Mechanics</Text>
-        </TouchableOpacity>
-      </View>
+      {userId == "" &&
+          <View style={styles.container}>
+            <LoginPage/>
+          </View>
+      }
+      {userId != "" &&
+          <View style={styles.container}>
+            <View style={styles.content}>
+              <View style={styles.photoContainer}>
+                {/* Add your photo component here */}
+              </View>
+            </View>
+            <View style={styles.footer}>
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>Home</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>Garage</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>Mechanics</Text>
+              </TouchableOpacity>
+            </View>
+          </View >
+      }
     </View>
   );
 }
@@ -42,6 +72,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
+    marginTop: '5%'
   },
   content: {
     flex: 4 / 5,
