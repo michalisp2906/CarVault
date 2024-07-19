@@ -2,6 +2,7 @@ import {Tabs} from 'expo-router';
 import React from 'react';
 import {useColorScheme} from '@/hooks/useColorScheme';
 import {FontAwesome, MaterialCommunityIcons} from "@expo/vector-icons";
+import { AntDesign } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -17,19 +18,19 @@ export default function TabLayout() {
               }}
           />
           <Tabs.Screen
-              name="garage"
+              name="mechanics"
               options={{
-                  title: 'Garage',
+                  title: 'Mechanics',
                   headerShown : false,
-                  tabBarIcon: ({ color }) => <MaterialCommunityIcons size={35   } name="garage" color={color} />,
+                  tabBarIcon: ({ color }) => <MaterialCommunityIcons size={35} name="garage" color={color} />,
               }}
           />
           <Tabs.Screen
-              name="settings"
+              name="profile"
               options={{
-                  title: 'Settings',
+                  title: 'Profile',
                   headerShown : false,
-                  tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                  tabBarIcon: ({ color }) => <AntDesign size={28} name="user" color={color} />,
               }}
           />
       </Tabs>

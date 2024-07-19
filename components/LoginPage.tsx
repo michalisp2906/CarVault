@@ -23,6 +23,7 @@ export default function LoginPage() {
     const [phoneNumber, setPhoneNumber] = React.useState("");
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
+    const [dateofbirth, setDateOfBirth] = React.useState("")
     const [errorMsg, setErrorMsg] = React.useState("")
     const [currentView, setCurrentView] = React.useState('initial');
     const [nameFocused, setNameFocused] = React.useState(false);
@@ -30,6 +31,8 @@ export default function LoginPage() {
     const [phoneNumberFocused, setPhoneNumberFocused] = React.useState(false);
     const [emailFocused, setEmailFocused] = React.useState(false);
     const [passwordFocused, setPasswordFocused] = React.useState(false);
+    const [dateofbirthFocused, setDateOfBirthFocused] = React.useState(false);
+    
 
     const handleSignInPress = () => {
         setCurrentView('signIn');
@@ -58,6 +61,7 @@ export default function LoginPage() {
                     username: username,
                     user_full_name: name,
                     user_phone_number: phoneNumber,
+                    dateofbirth: dateofbirth
                 });
             })
             .then(() => {
@@ -240,6 +244,18 @@ export default function LoginPage() {
                                 style={[passwordFocused && styles.inputFocused]}
                                 onFocus={() => setPasswordFocused(true)}
                                 onBlur={() => setPasswordFocused(false)}
+                            />
+                        </Input>
+
+                        <Input mt={"$3"} variant="underlined" w="75%" size="md" isDisabled={false} isInvalid={false} isReadOnly={false}>
+                            <InputField
+                                placeholder='Date of Birth'
+                                value={dateofbirth}
+                                onChangeText={setDateOfBirth}
+                                color={'#FFEDDF'}
+                                style={[dateofbirthFocused && styles.inputFocused]}
+                                onFocus={() => setDateOfBirthFocused(true)}
+                                onBlur={() => setDateOfBirthFocused(false)}
                             />
                         </Input>
                         <Button bg={'#FFEDDF'} onPress={signUp} w="30%" mt="$4">
