@@ -47,7 +47,7 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Text, View, TextInput, Button, FlatList, Image, StyleSheet } from 'react-native';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import { firestore } from '@/firebaseConfig';
+import { db, auth } from '@/firebaseConfig';
 import LoginPage from "@/components/LoginPage";
 import { Heading } from "@gluestack-ui/themed";
 
@@ -75,7 +75,7 @@ export default function HomeScreen() {
   }, []);
 
   const fetchCars = async (userId: string) => {
-    const q = query(collection(firestore, 'Car'), where('userId', '==', userId));
+    const q = query(collection(db, 'Car'), where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
     const fetchedCars: Array<any> = [];
     querySnapshot.forEach((doc) => {
@@ -87,7 +87,7 @@ export default function HomeScreen() {
   const addVehicle = async () => {
     if (manufacturer && model && pictureUrl && userId) {
       try {
-        await addDoc(collection(firestore, 'Car'), {
+        await addDoc(collection(db, 'Car'), {
           manufacturer,
           model,
           picture_url: pictureUrl,
