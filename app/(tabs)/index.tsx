@@ -44,12 +44,13 @@
 // }
 
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, Text, View, TextInput, Button, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView, Text, View, TextInput, Button, FlatList, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import { db, auth } from '@/firebaseConfig'; // Correctly import db and auth
+import { collection, addDoc, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { db, auth } from '@/firebaseConfig';
 import LoginPage from '@/components/LoginPage';
 import { Heading } from '@gluestack-ui/themed';
+import { GestureHandlerRootView, RectButton, Swipeable } from 'react-native-gesture-handler';
 
 export default function HomeScreen() {
   const [userId, setUserId] = useState<string>("");
@@ -113,82 +114,104 @@ export default function HomeScreen() {
     }
   };
 
+  const deleteVehicle = async (carId: string) => {
+    try {
+      await deleteDoc(doc(db, 'Car', carId));
+      console.log('Vehicle deleted successfully');
+      fetchCars(userId);
+    } catch (e) {
+      console.error('Error deleting document: ', e);
+    }
+  };
+
+  const renderRightActions = (carId: string) => {
+    return (
+      <RectButton style={styles.deleteButton} onPress={() => deleteVehicle(carId)}>
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </RectButton>
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.logoText}>CarVault</Text>
-      </View>
-      {userId === "" && (
-        <View style={styles.container}>
-          <LoginPage />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.logoText}>CarVault</Text>
         </View>
-      )}
-      {userId !== "" && (
-        <View style={styles.container}>
-          <View style={styles.header}>
-            <Heading style={styles.logoText}>Main page</Heading>
+        {userId === "" && (
+          <View style={styles.container}>
+            <LoginPage />
           </View>
-          {!formVisible && (
-            <TouchableOpacity style={styles.addButton} onPress={() => setFormVisible(true)}>
-              <Text style={styles.addButtonText}>Add Vehicle</Text>
-            </TouchableOpacity>
-          )}
-          {formVisible && (
-            <View style={styles.formContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Manufacturer"
-                value={manufacturer}
-                onChangeText={setManufacturer}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Model"
-                value={model}
-                onChangeText={setModel}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Picture URL"
-                value={pictureUrl}
-                onChangeText={setPictureUrl}
-              />
-              <Button title="Add Vehicle" onPress={addVehicle} />
-              <Button title="Back" onPress={() => setFormVisible(false)} color="gray" />
+        )}
+        {userId !== "" && (
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <Heading style={styles.logoText}>Main page</Heading>
             </View>
-          )}
-          <FlatList
-            data={cars}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.carItem}>
-                <View style={styles.carDetails}>
-                  <Text style={styles.carText}>Manufacturer: {item.manufacturer}</Text>
-                  <Text style={styles.carText}>Model: {item.model}</Text>
-                </View>
-                <View style={styles.carImageContainer}>
-                  <Image source={{ uri: item.picture_url }} style={styles.carImage} />
-                </View>
+            {!formVisible && (
+              <TouchableOpacity style={styles.addButton} onPress={() => setFormVisible(true)}>
+                <Text style={styles.addButtonText}>Add Vehicle</Text>
+              </TouchableOpacity>
+            )}
+            {formVisible && (
+              <View style={styles.formContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Manufacturer"
+                  value={manufacturer}
+                  onChangeText={setManufacturer}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Model"
+                  value={model}
+                  onChangeText={setModel}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Picture URL"
+                  value={pictureUrl}
+                  onChangeText={setPictureUrl}
+                />
+                <Button title="Add Vehicle" onPress={addVehicle} />
+                <Button title="Back" onPress={() => setFormVisible(false)} color="gray" />
               </View>
             )}
-            ListEmptyComponent={() => (
-              <Text style={styles.emptyListText}>No vehicles found.</Text>
-            )}
-          />
-        </View>
-      )}
-    </SafeAreaView>
+            <FlatList
+              data={cars}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Swipeable renderRightActions={() => renderRightActions(item.id)}>
+                  <View style={styles.carItem}>
+                    <View style={styles.carDetails}>
+                      <Text style={styles.carText}>Manufacturer: {item.manufacturer}</Text>
+                      <Text style={styles.carText}>Model: {item.model}</Text>
+                    </View>
+                    <View style={styles.carImageContainer}>
+                      <Image source={{ uri: item.picture_url }} style={styles.carImage} />
+                    </View>
+                  </View>
+                </Swipeable>
+              )}
+              ListEmptyComponent={() => (
+                <Text style={styles.emptyListText}>No vehicles found.</Text>
+              )}
+            />
+          </View>
+        )}
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D3D3D3', // Light grey background
+    backgroundColor: '#D3D3D3',
   },
   header: {
     flex: 1 / 5,
-    backgroundColor: '#004225', // British racing green
+    backgroundColor: '#004225',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -200,7 +223,7 @@ const styles = StyleSheet.create({
   addButton: {
     marginTop: 20,
     marginBottom: 20,
-    backgroundColor: '#004225', // British racing green
+    backgroundColor: '#004225',
     borderRadius: 50,
     paddingVertical: 10,
     paddingHorizontal: 30,
@@ -251,6 +274,17 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 5,
   },
+  deleteButton: {
+    backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 75,
+    height: '100%',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
   emptyListText: {
     textAlign: 'center',
     marginTop: 20,
@@ -258,6 +292,9 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
 });
+
+
+
 
 
 
