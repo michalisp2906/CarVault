@@ -44,20 +44,20 @@
 // }
 
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, Text, View, TextInput, Button, FlatList, Image, StyleSheet } from 'react-native';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { SafeAreaView, Text, View, TextInput, Button, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import { db, auth } from '@/firebaseConfig';
-import LoginPage from "@/components/LoginPage";
-import { Heading } from "@gluestack-ui/themed";
+import { db, auth } from '@/firebaseConfig'; // Correctly import db and auth
+import LoginPage from '@/components/LoginPage';
+import { Heading } from '@gluestack-ui/themed';
 
 export default function HomeScreen() {
-  const auth = getAuth();
   const [userId, setUserId] = useState<string>("");
   const [manufacturer, setManufacturer] = useState<string>("");
   const [model, setModel] = useState<string>("");
   const [pictureUrl, setPictureUrl] = useState<string>("");
   const [cars, setCars] = useState<Array<any>>([]);
+  const [formVisible, setFormVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -75,13 +75,21 @@ export default function HomeScreen() {
   }, []);
 
   const fetchCars = async (userId: string) => {
-    const q = query(collection(db, 'Car'), where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
-    const fetchedCars: Array<any> = [];
-    querySnapshot.forEach((doc) => {
-      fetchedCars.push({ id: doc.id, ...doc.data() });
-    });
-    setCars(fetchedCars);
+    console.log("Fetching cars for user: " + userId);
+    try {
+      const q = query(collection(db, 'Car'), where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      const fetchedCars: Array<any> = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log("Fetched car data: ", data);
+        fetchedCars.push({ id: doc.id, ...data });
+      });
+      console.log("Fetched cars array: ", fetchedCars);
+      setCars(fetchedCars);
+    } catch (error) {
+      console.error("Error fetching cars: ", error);
+    }
   };
 
   const addVehicle = async () => {
@@ -93,10 +101,12 @@ export default function HomeScreen() {
           picture_url: pictureUrl,
           userId,
         });
+        console.log("Vehicle added successfully");
         fetchCars(userId);
         setManufacturer('');
         setModel('');
         setPictureUrl('');
+        setFormVisible(false);
       } catch (e) {
         console.error('Error adding document: ', e);
       }
@@ -118,35 +128,51 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <Heading style={styles.logoText}>Main page</Heading>
           </View>
-          {/* Form to add a vehicle */}
-          <TextInput
-            style={styles.input}
-            placeholder="Manufacturer"
-            value={manufacturer}
-            onChangeText={setManufacturer}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Model"
-            value={model}
-            onChangeText={setModel}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Picture URL"
-            value={pictureUrl}
-            onChangeText={setPictureUrl}
-          />
-          <Button title="Add Vehicle" onPress={addVehicle} />
-          {/* List of vehicles */}
+          {!formVisible && (
+            <TouchableOpacity style={styles.addButton} onPress={() => setFormVisible(true)}>
+              <Text style={styles.addButtonText}>Add Vehicle</Text>
+            </TouchableOpacity>
+          )}
+          {formVisible && (
+            <View style={styles.formContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Manufacturer"
+                value={manufacturer}
+                onChangeText={setManufacturer}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Model"
+                value={model}
+                onChangeText={setModel}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Picture URL"
+                value={pictureUrl}
+                onChangeText={setPictureUrl}
+              />
+              <Button title="Add Vehicle" onPress={addVehicle} />
+              <Button title="Back" onPress={() => setFormVisible(false)} color="gray" />
+            </View>
+          )}
           <FlatList
             data={cars}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.carItem}>
-                <Text>{item.manufacturer} {item.model}</Text>
-                <Image source={{ uri: item.picture_url }} style={styles.carImage} />
+                <View style={styles.carDetails}>
+                  <Text style={styles.carText}>Manufacturer: {item.manufacturer}</Text>
+                  <Text style={styles.carText}>Model: {item.model}</Text>
+                </View>
+                <View style={styles.carImageContainer}>
+                  <Image source={{ uri: item.picture_url }} style={styles.carImage} />
+                </View>
               </View>
+            )}
+            ListEmptyComponent={() => (
+              <Text style={styles.emptyListText}>No vehicles found.</Text>
             )}
           />
         </View>
@@ -171,6 +197,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
+  addButton: {
+    marginTop: 20,
+    marginBottom: 20,
+    backgroundColor: '#004225', // British racing green
+    borderRadius: 50,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    alignSelf: 'center',
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  formContainer: {
+    padding: 20,
+  },
   input: {
     height: 40,
     borderColor: 'gray',
@@ -179,6 +222,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   carItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginVertical: 10,
     padding: 10,
     backgroundColor: 'white',
@@ -189,12 +234,31 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  carDetails: {
+    flex: 3,
+  },
+  carText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  carImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   carImage: {
-    width: '100%',
-    height: 200,
-    marginTop: 10,
+    width: 80,
+    height: 80,
+    borderRadius: 5,
+  },
+  emptyListText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: 'gray',
   },
 });
+
 
 
 
